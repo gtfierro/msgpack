@@ -1,9 +1,5 @@
 package msgpack
 
-import (
-	"unsafe"
-)
-
 /** Each of these functions should take 3 arguments: the buffer to add into, an
  * offset into that buffer (where our writes start), and the value to encode.
  * After encoding the value and placing the byte sequence in the buffer
@@ -125,10 +121,36 @@ func encodeUint(buf []byte, offset int, val uint) int {
 	return offset
 }
 
+func encodeString(buf []byte, offset int, val string) int {
+	l := len(val)
+	switch {
+	case l <= 31: // fixstr
+		buf[offset] = byte(0xa0 | l)
+		offset += 1
+	case l <= 255: // str8
+		buf[offset] = byte(0xd9)
+		buf[offset+1] = byte(l)
+		offset += 2
+	case l <= 65535: // str16
+		buf[offset] = byte(0xda)
+		offset += 1
+		offset = encodeUint(buf, offset, uint(l))
+	default: // str32
+		buf[offset] = byte(0xdb)
+		offset += 1
+		offset = encodeUint(buf, offset, uint(l))
+	}
+	for i := 0; i < l; i++ { // TODO fewer copies, e.g. not 1 byte at a time
+		buf[offset + i] = val[i]
+	}
+	offset += l
+	return offset
+}
+
 func Encode(input interface{}) []byte {
 	// try to just do 1 allocation.
 	//TODO: try to predict a slightly larger size. what is the rate of growth on msgpack encoding?
-	ret := make([]byte, uint64(unsafe.Sizeof(input)))
+	ret := make([]byte, uint64(1000))
 	offset := 0
 	switch input.(type) {
 	case int:
@@ -138,8 +160,9 @@ func Encode(input interface{}) []byte {
 	case int64:
 		offset = encodeInt64(ret, offset, input.(int64))
 	case uint64:
-		offset = encodeUint(ret, offset, input.(uint))
+		offset = encodeUint(ret, offset, uint(input.(uint64)))
 	case string:
+		offset = encodeString(ret, offset, input.(string))
 	case map[string]interface{}:
 	case []interface{}:
 	case bool:
