@@ -69,10 +69,11 @@ func parseInt(input *[]byte, offset int) (int64, int) {
 		log.Panicf("UNKNOWN int: %v", c)
 	}
 
-	value = int64(tmp >> 1)
-	if tmp&1 != 0 {
-		value = ^value
-	}
+	//value = int64(tmp >> 1)
+	value = int64(tmp)
+	//if tmp&1 != 0 {
+	//	value = ^value
+	//}
 
 ret:
 	return value, consumed
