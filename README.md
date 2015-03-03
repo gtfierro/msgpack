@@ -2,7 +2,7 @@
 MsgPack Decoding and Encoding
 
 ```bash
-gabe@gabenix:~/src/msgpack$ go test -bench=. -run=X -cpuprofile=cpu.out                                                                                                                                                                                                                     
+gabe@gabenix:~/src/msgpack$ go test -bench=. -run=X -cpuprofile=cpu.out
 PASS
 BenchmarkEncodeBool      5000000               304 ns/op
 BenchmarkEncodeFixInt    5000000               324 ns/op
