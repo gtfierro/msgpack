@@ -12,26 +12,52 @@ var bufpool = sync.Pool{
 	},
 }
 
+// returns true if the two slices are equal
+func isStringSliceEqual(x, y []string) bool {
+	if len(x) != len(y) {
+		return false
+	}
+	for idx := range x {
+		if x[idx] != y[idx] {
+			return false
+		}
+	}
+	return true
+}
+
+// returns true if the two slices are equal
+func compareInterfaceStringSlice(x []interface{}, y []string) bool {
+	if len(x) != len(y) {
+		return false
+	}
+	for idx := range x {
+		if x[idx].(string) != y[idx] {
+			return false
+		}
+	}
+	return true
+}
+
 func TestEncodeBool(t *testing.T) {
 	val := true
 	bytes := bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 1 {
+	done := Encode(val, &bytes)
+	if done != 1 {
 		t.Errorf("Encoded length should be 1 but is %v", len(bytes))
 	}
 	if bytes[0] != byte(0xc3) {
-		t.Errorf("True should be 0xc3 but is %v", bytes[0])
+		t.Errorf("True should be 0xc3 but is 0x%x", bytes[0])
 	}
 	bufpool.Put(bytes)
 	bytes = bufpool.Get().([]byte)
 
 	val = false
-	Encode(val, &bytes)
-	if len(bytes) != 1 {
+	done = Encode(val, &bytes)
+	if done != 1 {
 		t.Errorf("Encoded length should be 1 but is %v", len(bytes))
 	}
 	if bytes[0] != byte(0xc2) {
-		t.Errorf("True should be 0xc2 but is %v", bytes[0])
+		t.Errorf("True should be 0xc2 but is 0x%x", bytes[0])
 	}
 	bufpool.Put(bytes)
 }
@@ -52,12 +78,12 @@ func TestEncodeFixInt(t *testing.T) {
 	// valid pos fixint
 	val = 120
 	bytes = bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 1 {
+	done := Encode(val, &bytes)
+	if done != 1 {
 		t.Errorf("Encoded length should be 1 but is %v", len(bytes))
 	}
 	if bytes[0] != byte(0x78) {
-		t.Errorf("Int should be 0x78 but is %v", bytes[0])
+		t.Errorf("Int should be 0x78 but is 0x%x", bytes[0])
 	}
 	_, dec := Decode(&bytes, 0)
 	if dec.(int64) != 120 {
@@ -68,12 +94,12 @@ func TestEncodeFixInt(t *testing.T) {
 	// valid neg fixint
 	val = -20
 	bytes = bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 1 {
+	done = Encode(val, &bytes)
+	if done != 1 {
 		t.Errorf("Encoded length should be 1 but is %v", len(bytes))
 	}
 	if bytes[0] != byte(0xf4) {
-		t.Errorf("Int should be 0xf4 but is %v", bytes[0])
+		t.Errorf("Int should be 0xf4 but is 0x%x", bytes[0])
 	}
 	_, dec = Decode(&bytes, 0)
 	if dec.(int64) != -20 {
@@ -97,12 +123,12 @@ func TestEncodeInt(t *testing.T) {
 
 	val = 32123 // int16
 	bytes := bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 3 {
+	done := Encode(val, &bytes)
+	if done != 3 {
 		t.Errorf("Encoded length should be 3 but is %v", len(bytes))
 	}
 	if bytes[0] != byte(0xd1) {
-		t.Errorf("Should be encoded as int16 0xd1 but is %v", bytes[0])
+		t.Errorf("Should be encoded as int16 0xd1 but is 0x%x", bytes[0])
 	}
 	_, dec = Decode(&bytes, 0)
 	if dec.(int64) != 32123 {
@@ -112,12 +138,12 @@ func TestEncodeInt(t *testing.T) {
 
 	val = -1234 // int16
 	bytes = bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 3 {
+	done = Encode(val, &bytes)
+	if done != 3 {
 		t.Errorf("Encoded length should be 3 but is %v", len(bytes))
 	}
 	if bytes[0] != byte(0xd1) {
-		t.Errorf("Should be encoded as int16 0xd1 but is %v", bytes[0])
+		t.Errorf("Should be encoded as int16 0xd1 but is 0x%x", bytes[0])
 	}
 	_, dec = Decode(&bytes, 0)
 	if dec.(int64) != -1234 {
@@ -132,12 +158,12 @@ func TestEncodeIntBigger(t *testing.T) {
 
 	val = 2147483647 // int32
 	bytes := bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 5 {
+	done := Encode(val, &bytes)
+	if done != 5 {
 		t.Errorf("Encoded length should be 5 but is %v", len(bytes))
 	}
 	if bytes[0] != byte(0xd2) {
-		t.Errorf("Should be encoded as int32 0xd2 but is %v", bytes[0])
+		t.Errorf("Should be encoded as int32 0xd2 but is 0x%x", bytes[0])
 	}
 	_, dec = Decode(&bytes, 0)
 	if dec.(int64) != 2147483647 {
@@ -147,12 +173,12 @@ func TestEncodeIntBigger(t *testing.T) {
 
 	val = 4194957296 // int64
 	bytes = bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 9 {
+	done = Encode(val, &bytes)
+	if done != 9 {
 		t.Errorf("Encoded length should be 9 but is %v", len(bytes))
 	}
 	if bytes[0] != byte(0xd3) {
-		t.Errorf("Should be encoded as int64 0xd3 but is %v", bytes[0])
+		t.Errorf("Should be encoded as int64 0xd3 but is 0x%x", bytes[0])
 	}
 	_, dec = Decode(&bytes, 0)
 	if dec.(int64) != 4194957296 {
@@ -195,12 +221,12 @@ func TestEncodeUint(t *testing.T) {
 
 	val = 120 // uint8
 	bytes = bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 2 {
+	done := Encode(val, &bytes)
+	if done != 2 {
 		t.Errorf("Encoded length should be 2 but is %v", len(bytes))
 	}
 	if bytes[0] != byte(0xcc) {
-		t.Errorf("Should be encoded as uint8 0xcc but is %v", bytes[0])
+		t.Errorf("Should be encoded as uint8 0xcc but is 0x%x", bytes[0])
 	}
 	_, dec = Decode(&bytes, 0)
 	if dec.(uint64) != 120 {
@@ -210,12 +236,12 @@ func TestEncodeUint(t *testing.T) {
 
 	val = 32123 // uint16
 	bytes = bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 3 {
+	done = Encode(val, &bytes)
+	if done != 3 {
 		t.Errorf("Encoded length should be 3 but is %v", len(bytes))
 	}
 	if bytes[0] != byte(0xcd) {
-		t.Errorf("Should be encoded as uint16 0xcd but is %v", bytes[0])
+		t.Errorf("Should be encoded as uint16 0xcd but is 0x%x", bytes[0])
 	}
 	_, dec = Decode(&bytes, 0)
 	if dec.(uint64) != 32123 {
@@ -225,12 +251,12 @@ func TestEncodeUint(t *testing.T) {
 
 	val = 2147483647 // uint32
 	bytes = bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 5 {
+	done = Encode(val, &bytes)
+	if done != 5 {
 		t.Errorf("Encoded length should be 5 but is %v", len(bytes))
 	}
 	if bytes[0] != byte(0xce) {
-		t.Errorf("Should be encoded as uint32 0xce but is %v", bytes[0])
+		t.Errorf("Should be encoded as uint32 0xce but is 0x%x", bytes[0])
 	}
 	_, dec = Decode(&bytes, 0)
 	if dec.(uint64) != 2147483647 {
@@ -240,12 +266,12 @@ func TestEncodeUint(t *testing.T) {
 
 	val = uint(time.Now().UnixNano()) // uint64
 	bytes = bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 9 {
+	done = Encode(val, &bytes)
+	if done != 9 {
 		t.Errorf("Encoded length should be 9 but is %v", len(bytes))
 	}
 	if bytes[0] != byte(0xcf) {
-		t.Errorf("Should be encoded as uint64 0xcf but is %v", bytes[0])
+		t.Errorf("Should be encoded as uint64 0xcf but is 0x%x", bytes[0])
 	}
 	_, dec = Decode(&bytes, 0)
 	if dec.(uint64) != uint64(val) {
@@ -288,12 +314,12 @@ func TestEncodeString(t *testing.T) {
 
 	val = "asdf" // fixstr
 	bytes = bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 1+len(val) {
+	done := Encode(val, &bytes)
+	if done != 1+len(val) {
 		t.Errorf("Encoded length should be %v but is %v", 1+len(val), len(bytes))
 	}
 	if bytes[0]&0xa0 != byte(0xa0) {
-		t.Errorf("Should be encoded as fixstr 0xa0 but is %v", bytes[0])
+		t.Errorf("Should be encoded as fixstr 0xa0 but is 0x%x", bytes[0])
 	}
 	_, dec = Decode(&bytes, 0)
 	if dec.(string) != val {
@@ -303,12 +329,12 @@ func TestEncodeString(t *testing.T) {
 
 	val = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" // str8
 	bytes = bufpool.Get().([]byte)
-	Encode(val, &bytes)
-	if len(bytes) != 2+len(val) {
+	done = Encode(val, &bytes)
+	if done != 2+len(val) {
 		t.Errorf("Encoded length should be %v but is %v", 1+len(val), len(bytes))
 	}
 	if bytes[0]&0xd9 != byte(0xd9) {
-		t.Errorf("Should be encoded as fixstr 0xd9 but is %v", bytes[0])
+		t.Errorf("Should be encoded as fixstr 0xd9 but is 0x%x", bytes[0])
 	}
 	_, dec = Decode(&bytes, 0)
 	if dec.(string) != val {
@@ -319,6 +345,37 @@ func TestEncodeString(t *testing.T) {
 
 func BenchmarkEncodeStr8(b *testing.B) {
 	val := "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" // str8
+	for i := 0; i < b.N; i++ {
+		bytes := bufpool.Get().([]byte)
+		Encode(val, &bytes)
+		bufpool.Put(bytes)
+	}
+}
+
+func TestEncodeArray(t *testing.T) {
+	var bytes []byte
+	var dec interface{}
+
+	val := []string{"asdf", "fdsa", "four", "gabe"}
+	bytes = bufpool.Get().([]byte)
+	done := Encode(val, &bytes)
+	if done != 1+4+4*len(val) { // arr len + 4 strings (1 byte len + 4 string)
+		t.Errorf("Encoded length should be %v but is %v", 1+4+4*len(val), done)
+	}
+
+	if bytes[0]&0x90 != byte(0x90) {
+		t.Errorf("Should be encoded as fixarray 0x90 but is 0x%x", bytes[0])
+	}
+
+	_, dec = Decode(&bytes, 0)
+	if !compareInterfaceStringSlice(dec.([]interface{}), val) {
+		t.Errorf("Decode should be %v but was %v", val, dec)
+	}
+	bufpool.Put(bytes)
+}
+
+func BenchmarkEncodeArrayString(b *testing.B) {
+	val := []string{"asdf", "fdsa", "four", "gabe"}
 	for i := 0; i < b.N; i++ {
 		bytes := bufpool.Get().([]byte)
 		Encode(val, &bytes)

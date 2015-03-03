@@ -1,5 +1,25 @@
 package msgpack
 
+import (
+	"sync"
+)
+
+const DEFAULT_ARR_SIZE = 15
+
+var arrpool = sync.Pool{
+	New: func() interface{} {
+		return make([]interface{}, DEFAULT_ARR_SIZE)
+	},
+}
+
+func getNewArray(length int) []interface{} {
+	if length <= 15 {
+		return arrpool.Get().([]interface{})[:length]
+	} else {
+		return make([]interface{}, length)
+	}
+}
+
 /** Each of these functions should take 3 arguments: the buffer to add into, an
  * offset into that buffer (where our writes start), and the value to encode.
  * After encoding the value and placing the byte sequence in the buffer
@@ -147,11 +167,28 @@ func encodeString(buf []byte, offset int, val string) int {
 	return offset
 }
 
-// Encodes the input as a msgpack byte array, which is provided
-// by the user. This allows the user to control how many allocations
-// are done
-func Encode(input interface{}, ret *[]byte) {
-	offset := 0
+func encodeArray(buf []byte, offset int, val []interface{}) int {
+	l := len(val)
+	switch {
+	case l <= 15:
+		buf[offset] = byte(0x90 | l)
+		offset += 1
+	case l <= 65535: // (2^16 - 1)
+		buf[offset] = byte(0xdc)
+		offset += 1
+		offset = encodeUint(buf, offset, uint(l))
+	default: // up to 4294967295 (2^32 - 1)
+		buf[offset] = byte(0xdd)
+		offset += 1
+		offset = encodeUint(buf, offset, uint(l))
+	}
+	for i := 0; i < l; i++ {
+		offset = doEncode(val[i], &buf, offset)
+	}
+	return offset
+}
+
+func doEncode(input interface{}, ret *[]byte, offset int) int {
 	switch input.(type) {
 	case int:
 		offset = encodeInt(*ret, offset, input.(int))
@@ -165,11 +202,27 @@ func Encode(input interface{}, ret *[]byte) {
 		offset = encodeString(*ret, offset, input.(string))
 	case map[string]interface{}:
 	case []interface{}:
+		offset = encodeArray(*ret, offset, input.([]interface{}))
+	case []string:
+		arr := getNewArray(len(input.([]string)))
+		for i := 0; i < len(input.([]string)); i++ {
+			arr[i] = interface{}(input.([]string)[i])
+		}
+		offset = encodeArray(*ret, offset, arr)
+		arrpool.Put(arr)
 	case bool:
 		offset = encodeBool(*ret, offset, input.(bool))
 	case nil:
 		offset = encodeNil(*ret, offset)
 	default:
 	}
-	*ret = (*ret)[:offset]
+	return offset
+}
+
+// Encodes the input as a msgpack byte array, which is provided
+// by the user. This allows the user to control how many allocations
+// are done. Returns the length of the encoded message, but does
+// not adjust the length of the input array.
+func Encode(input interface{}, ret *[]byte) int {
+	return doEncode(input, ret, 0)
 }
