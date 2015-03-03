@@ -15,4 +15,25 @@ BenchmarkEncodeUInt64    5000000               327 ns/op
 BenchmarkEncodeStr8      3000000               487 ns/op
 ```
 
+## Features
+
+| Type      | Decode Impl | Decode Test | Encode Impl | Encode Test | Issues |
+| ----      | ----------- | ----------- | ----------- | ----------- | ------ |
+| fixint    | X           |             | X           | X           | None   |
+| fixmap    | X           |             |             |             | None   |
+| fixarray  | X           |             |             |             | None   |
+| fixstr    | X           |             | X           | X           | None   |
+| nil       | X           |             | X           | X           | None   |
+| false     | X           |             | X           | X           | None   |
+| true      | X           |             | X           | X           | None   |
+| bin\*     |             |             |             |             | None   |
+| ext\*     |             |             |             |             | None   |
+| fixext\*  |             |             |             |             | None   |
+| float\*   | X           |             | X           | X           | negatives   |
+| int\*     | X           |             | X           | X           | negatives   |
+| uint\*    | X           |             | X           | X           | None   |
+| str\*     | X           |             | X           | X           | None   |
+| array\*   | X           |             | X           |             | not generic yet   |
+| map\*     | X           |             |             |             | None   |
+
 **WORK IN PROGRESS -- do not use this for anything requiring correctness**
