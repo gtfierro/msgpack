@@ -141,35 +141,35 @@ func encodeString(buf []byte, offset int, val string) int {
 		offset = encodeUint(buf, offset, uint(l))
 	}
 	for i := 0; i < l; i++ { // TODO fewer copies, e.g. not 1 byte at a time
-		buf[offset + i] = val[i]
+		buf[offset+i] = val[i]
 	}
 	offset += l
 	return offset
 }
 
-func Encode(input interface{}) []byte {
-	// try to just do 1 allocation.
-	//TODO: try to predict a slightly larger size. what is the rate of growth on msgpack encoding?
-	ret := make([]byte, uint64(1000))
+// Encodes the input as a msgpack byte array, which is provided
+// by the user. This allows the user to control how many allocations
+// are done
+func Encode(input interface{}, ret *[]byte) {
 	offset := 0
 	switch input.(type) {
 	case int:
-		offset = encodeInt(ret, offset, input.(int))
+		offset = encodeInt(*ret, offset, input.(int))
 	case uint:
-		offset = encodeUint(ret, offset, input.(uint))
+		offset = encodeUint(*ret, offset, input.(uint))
 	case int64:
-		offset = encodeInt64(ret, offset, input.(int64))
+		offset = encodeInt64(*ret, offset, input.(int64))
 	case uint64:
-		offset = encodeUint(ret, offset, uint(input.(uint64)))
+		offset = encodeUint(*ret, offset, uint(input.(uint64)))
 	case string:
-		offset = encodeString(ret, offset, input.(string))
+		offset = encodeString(*ret, offset, input.(string))
 	case map[string]interface{}:
 	case []interface{}:
 	case bool:
-		offset = encodeBool(ret, offset, input.(bool))
+		offset = encodeBool(*ret, offset, input.(bool))
 	case nil:
-		offset = encodeNil(ret, offset)
+		offset = encodeNil(*ret, offset)
 	default:
 	}
-	return ret[:offset]
+	*ret = (*ret)[:offset]
 }
