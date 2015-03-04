@@ -203,13 +203,6 @@ func doEncode(input interface{}, ret *[]byte, offset int) int {
 	case map[string]interface{}:
 	case []interface{}:
 		offset = encodeArray(*ret, offset, input.([]interface{}))
-	case []string:
-		arr := getNewArray(len(input.([]string)))
-		for i := 0; i < len(input.([]string)); i++ {
-			arr[i] = interface{}(input.([]string)[i])
-		}
-		offset = encodeArray(*ret, offset, arr)
-		arrpool.Put(arr)
 	case bool:
 		offset = encodeBool(*ret, offset, input.(bool))
 	case nil:

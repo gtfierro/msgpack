@@ -26,12 +26,12 @@ func isStringSliceEqual(x, y []string) bool {
 }
 
 // returns true if the two slices are equal
-func compareInterfaceStringSlice(x []interface{}, y []string) bool {
+func compareInterfaceStringSlice(x, y []interface{}) bool {
 	if len(x) != len(y) {
 		return false
 	}
 	for idx := range x {
-		if x[idx].(string) != y[idx] {
+		if x[idx].(string) != y[idx].(string) {
 			return false
 		}
 	}
@@ -356,7 +356,7 @@ func TestEncodeArray(t *testing.T) {
 	var bytes []byte
 	var dec interface{}
 
-	val := []string{"asdf", "fdsa", "four", "gabe"}
+	val := []interface{}{"asdf", "fdsa", "four", "gabe"}
 	bytes = bufpool.Get().([]byte)
 	done := Encode(val, &bytes)
 	if done != 1+4+4*len(val) { // arr len + 4 strings (1 byte len + 4 string)
