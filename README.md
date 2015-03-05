@@ -2,36 +2,39 @@
 MsgPack Decoding and Encoding
 
 ```bash
-gabe@gabenix:~/src/msgpack$ go test -bench=. -run=X -cpuprofile=cpu.out
-BenchmarkDecodeBool     30000000                37.3 ns/op
-BenchmarkDecodeFixInt   30000000                53.2 ns/op
-BenchmarkDecodeUInt     20000000                66.6 ns/op
-BenchmarkDecodeUInt16   20000000                70.8 ns/op
-BenchmarkDecodeUInt32   20000000                76.6 ns/op
-BenchmarkDecodeUInt64   20000000                74.9 ns/op
-BenchmarkDecodeInt      30000000                59.0 ns/op
-BenchmarkDecodeInt16    20000000                62.6 ns/op
-BenchmarkDecodeInt32    20000000                76.4 ns/op
-BenchmarkDecodeInt64    20000000                79.9 ns/op
-BenchmarkDecodeFixStr   10000000               167 ns/op
-BenchmarkDecodeStr8      3000000               599 ns/op
+go test -bench=. -run=X -cpuprofile cpu.out -memprofile mem.out
+PASS
+BenchmarkDecodeBool     30000000                38.2 ns/op
+BenchmarkDecodeFixInt   30000000                53.7 ns/op
+BenchmarkDecodeUInt     20000000                74.7 ns/op
+BenchmarkDecodeUInt16   20000000                80.0 ns/op
+BenchmarkDecodeUInt32   20000000                70.5 ns/op
+BenchmarkDecodeUInt64   20000000                85.6 ns/op
+BenchmarkDecodeInt      30000000                56.0 ns/op
+BenchmarkDecodeInt16    20000000                71.4 ns/op
+BenchmarkDecodeInt32    20000000                70.1 ns/op
+BenchmarkDecodeInt64    20000000                75.6 ns/op
+BenchmarkDecodeFixStr   10000000               174 ns/op
+BenchmarkDecodeStr8      2000000               658 ns/op
 BenchmarkDecodeStr16           0                 0 ns/op
 BenchmarkDecodeStr32           0                 0 ns/op
-BenchmarkDecodeFixArray  1000000              1593 ns/op
-BenchmarkDecodeArray16    200000             11062 ns/op
-BenchmarkDecodeFixMap     200000              6183 ns/op
+BenchmarkDecodeFixArray  1000000              1624 ns/op
+BenchmarkDecodeArray16    200000             11262 ns/op
+BenchmarkDecodeFixMap     200000              6486 ns/op
 BenchmarkDecodeMap16           0                 0 ns/op
 
-BenchmarkEncodeBool     10000000               194 ns/op
-BenchmarkEncodeFixInt   10000000               223 ns/op
-BenchmarkEncodeInt16    10000000               233 ns/op
-BenchmarkEncodeInt32    10000000               231 ns/op
-BenchmarkEncodeInt64    10000000               239 ns/op
-BenchmarkEncodeUInt16   10000000               185 ns/op
-BenchmarkEncodeUInt32   10000000               186 ns/op
+BenchmarkEncodeBool     10000000               191 ns/op
+BenchmarkEncodeFixInt   10000000               224 ns/op
+BenchmarkEncodeInt16    10000000               236 ns/op
+BenchmarkEncodeInt32    10000000               233 ns/op
+BenchmarkEncodeInt64    10000000               238 ns/op
+BenchmarkEncodeUInt16   10000000               181 ns/op
+BenchmarkEncodeUInt32   10000000               184 ns/op
 BenchmarkEncodeUInt64   10000000               231 ns/op
-BenchmarkEncodeStr8      5000000               320 ns/op
-BenchmarkEncodeArrayString       1000000              1103 ns/op
+BenchmarkEncodeStr8      5000000               324 ns/op
+BenchmarkEncodeArrayString       5000000               268 ns/op
+BenchmarkEncodeFixMap    2000000               791 ns/op
+BenchmarkEncodeMap16      500000              3250 ns/op
 ```
 
 ## Features
