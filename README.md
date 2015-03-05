@@ -1,5 +1,8 @@
 # msgpack
-MsgPack Decoding and Encoding
+
+[![GoDoc](https://godoc.org/github.com/gtfierro/msgpack?status.svg)](https://godoc.org/github.com/gtfierro/msgpack)
+
+MsgPack Decoding and Encoding for people who don't ask much
 
 ```bash
 go test -bench=. -run=X -cpuprofile cpu.out -memprofile mem.out
