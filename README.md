@@ -40,7 +40,7 @@ BenchmarkEncodeArrayString       1000000              1103 ns/op
 | ----      | ----------- | ----------- | ----------- | ----------- | ------ |
 | fixint    | X           |             | X           | X           | None   |
 | fixmap    | X           |             |             |             | None   |
-| fixarray  | X           |             |             |             | None   |
+| fixarray  | X           |             | X           | X           | None   |
 | fixstr    | X           |             | X           | X           | None   |
 | nil       | X           |             | X           | X           | None   |
 | false     | X           |             | X           | X           | None   |
