@@ -1,3 +1,21 @@
+// This MsgPack encoding/decoding library was born out of a partial dissatisfaction with
+// the current implementation of (and lack of documentation of) MsgPack encoders/decoders
+// for Go. I also wanted some practice writing optimized Go code that attempted to avoid
+// allocations and "got out of the way" of libraries using it.
+//
+// This package is not finished yet, but it is close, and I've made an effort to do things
+// in a standard way so that what is actually being done underneath the covers is easy
+// to figure out. The focus of this package is not to provide the most fully featured
+// MsgPack implementation out there, but rather support the main data types that I
+// use in my work (most of the basic types, also []interface{} and map[string]interface{}).
+// You'll notice that I don't use the `reflect` package at all, and that's because I
+// wanted to see what code looked like when you just did a switch on types instead of
+// using runtime reflection to figure out the types. This of course comes at the cost
+// of not being able to extend this MsgPack implementation to arbitrary data types.
+// Implementing a new type on your own is not difficult, though.
+//
+// Coming up next are some more convenience methods for doing decoding and encoding
+// through writer/reader/buffer interfaces
 package msgpack
 
 import (
