@@ -141,6 +141,38 @@ func encodeUint(buf []byte, offset int, val uint) int {
 	return offset
 }
 
+// Encodes @val as a bigendian unsigned integer in buffer @buf
+// starting at offset @offset. Attempts to make it fit in @length
+// bytes, and will truncate if it cannot
+func encodeLength(buf []byte, offset int, val uint, length int) int {
+	switch {
+	case length == 1: // uint8
+		buf[offset] = byte(val)
+		offset += 1
+	case length == 2: // uint16
+		buf[offset] = byte(val >> 8)
+		buf[offset+1] = byte(val & 0xff)
+		offset += 2
+	case length == 4: // uint32
+		buf[offset] = byte(val >> 24)
+		buf[offset+1] = byte(val >> 16)
+		buf[offset+2] = byte(val >> 8)
+		buf[offset+3] = byte(val & 0xff)
+		offset += 4
+	default: // uint64
+		buf[offset] = byte(val >> 56)
+		buf[offset+1] = byte(val >> 48)
+		buf[offset+2] = byte(val >> 40)
+		buf[offset+3] = byte(val >> 32)
+		buf[offset+4] = byte(val >> 24)
+		buf[offset+5] = byte(val >> 16)
+		buf[offset+6] = byte(val >> 8)
+		buf[offset+7] = byte(val & 0xff)
+		offset += 8
+	}
+	return offset
+}
+
 func encodeString(buf []byte, offset int, val string) int {
 	l := len(val)
 	switch {
@@ -154,11 +186,11 @@ func encodeString(buf []byte, offset int, val string) int {
 	case l <= 65535: // str16
 		buf[offset] = byte(0xda)
 		offset += 1
-		offset = encodeUint(buf, offset, uint(l))
+		offset = encodeLength(buf, offset, uint(l), 2)
 	default: // str32
 		buf[offset] = byte(0xdb)
 		offset += 1
-		offset = encodeUint(buf, offset, uint(l))
+		offset = encodeLength(buf, offset, uint(l), 4)
 	}
 	for i := 0; i < l; i++ { // TODO fewer copies, e.g. not 1 byte at a time
 		buf[offset+i] = val[i]
@@ -176,11 +208,11 @@ func encodeArray(buf []byte, offset int, val []interface{}) int {
 	case l <= 65535: // (2^16 - 1)
 		buf[offset] = byte(0xdc)
 		offset += 1
-		offset = encodeUint(buf, offset, uint(l))
+		offset = encodeLength(buf, offset, uint(l), 2)
 	default: // up to 4294967295 (2^32 - 1)
 		buf[offset] = byte(0xdd)
 		offset += 1
-		offset = encodeUint(buf, offset, uint(l))
+		offset = encodeLength(buf, offset, uint(l), 4)
 	}
 	for i := 0; i < l; i++ {
 		offset = doEncode(val[i], &buf, offset)
