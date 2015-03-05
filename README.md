@@ -39,7 +39,7 @@ BenchmarkEncodeArrayString       1000000              1103 ns/op
 | Type      | Decode Impl | Decode Test | Encode Impl | Encode Test | Issues |
 | ----      | ----------- | ----------- | ----------- | ----------- | ------ |
 | fixint    | X           |             | X           | X           | None   |
-| fixmap    | X           |             |             |             | None   |
+| fixmap    | X           |             | X           | X           | None   |
 | fixarray  | X           |             | X           | X           | None   |
 | fixstr    | X           |             | X           | X           | None   |
 | nil       | X           |             | X           | X           | None   |
@@ -52,7 +52,7 @@ BenchmarkEncodeArrayString       1000000              1103 ns/op
 | int\*     | X           |             | X           | X           | negatives   |
 | uint\*    | X           |             | X           | X           | None   |
 | str\*     | X           |             | X           | X           | None   |
-| array\*   | X           |             | X           |             | not generic yet   |
-| map\*     | X           |             |             |             | None   |
+| array\*   | X           |             | X           | X           | None   |
+| map\*     | X           |             | X           | X           | None   |
 
 **WORK IN PROGRESS -- do not use this for anything requiring correctness**
