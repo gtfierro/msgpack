@@ -352,7 +352,7 @@ func BenchmarkEncodeStr8(b *testing.B) {
 	}
 }
 
-func TestEncodeArray(t *testing.T) {
+func TestEncodeFixArray(t *testing.T) {
 	var bytes []byte
 	var dec interface{}
 
@@ -365,6 +365,29 @@ func TestEncodeArray(t *testing.T) {
 
 	if bytes[0]&0x90 != byte(0x90) {
 		t.Errorf("Should be encoded as fixarray 0x90 but is 0x%x", bytes[0])
+	}
+
+	_, dec = Decode(&bytes, 0)
+	if !compareInterfaceStringSlice(dec.([]interface{}), val) {
+		t.Errorf("Decode should be %v but was %v", val, dec)
+	}
+	bufpool.Put(bytes)
+}
+
+func TestEncodeArray16(t *testing.T) {
+	var bytes []byte
+	var dec interface{}
+
+	val := []interface{}{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"}
+	bytes = bufpool.Get().([]byte)
+	done := Encode(val, &bytes)
+	length := 3 + 16*2 // arr prefix (3 bytes) + 16 len-1 strings
+	if done != length {
+		t.Errorf("Encoded length should be %v but is %v", length, done)
+	}
+
+	if bytes[0] != byte(0xdc) {
+		t.Errorf("Should be encoded as arr16 0xdc but is 0x%x", bytes[0])
 	}
 
 	_, dec = Decode(&bytes, 0)
