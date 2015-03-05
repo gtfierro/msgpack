@@ -220,6 +220,28 @@ func encodeArray(buf []byte, offset int, val []interface{}) int {
 	return offset
 }
 
+func encodeMap(buf []byte, offset int, val map[string]interface{}) int {
+	l := len(val)
+	switch {
+	case l <= 15:
+		buf[offset] = byte(0x80 | l)
+		offset += 1
+	case l <= 65535: // 2^16 - 1
+		buf[offset] = byte(0xde)
+		offset += 1
+		offset = encodeLength(buf, offset, uint(l), 2)
+	default: // up to 4294967295 (2^32 - 1)
+		buf[offset] = byte(0xdf)
+		offset += 1
+		offset = encodeLength(buf, offset, uint(l), 4)
+	}
+	for k, v := range val {
+		offset = doEncode(k, &buf, offset)
+		offset = doEncode(v, &buf, offset)
+	}
+	return offset
+}
+
 func doEncode(input interface{}, ret *[]byte, offset int) int {
 	switch input.(type) {
 	case int:
@@ -233,6 +255,7 @@ func doEncode(input interface{}, ret *[]byte, offset int) int {
 	case string:
 		offset = encodeString(*ret, offset, input.(string))
 	case map[string]interface{}:
+		offset = encodeMap(*ret, offset, input.(map[string]interface{}))
 	case []interface{}:
 		offset = encodeArray(*ret, offset, input.([]interface{}))
 	case bool:

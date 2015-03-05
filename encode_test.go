@@ -405,3 +405,69 @@ func BenchmarkEncodeArrayString(b *testing.B) {
 		bufpool.Put(bytes)
 	}
 }
+
+func TestEncodeFixMap(t *testing.T) {
+	var bytes []byte
+	var dec interface{}
+
+	val := map[string]interface{}{"a": 1, "b": 2, "c": 3}
+	bytes = bufpool.Get().([]byte)
+	done := Encode(val, &bytes)
+	length := 1 + 3*2 + 3 // 1 byte for map prefix, 3 * fixstring (2 bytes) + 3 * fixint
+	if done != length {
+		t.Errorf("Encoded length should be %v but is %v", length, done)
+	}
+
+	if bytes[0]&0x80 != byte(0x80) {
+		t.Errorf("Should be encoded as fixmap 0x80 but is 0x%x", bytes[0])
+	}
+	_, dec = Decode(&bytes, 0)
+	for k, _ := range dec.(map[string]interface{}) {
+		if _, found := val[k]; !found {
+			t.Errorf("Decode should be %v but was %v", val, dec)
+		}
+	}
+	bufpool.Put(bytes)
+}
+
+func TestEncodeMap16(t *testing.T) {
+	var bytes []byte
+	var dec interface{}
+
+	val := map[string]interface{}{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6, "g": 7, "h": 8, "i": 9, "j": 10, "k": 11, "l": 12, "m": 13, "n": 14, "o": 15, "p": 16}
+	bytes = bufpool.Get().([]byte)
+	done := Encode(val, &bytes)
+	length := 3 + 16*2 + 16 // 1 byte for map prefix, 16 * fixstring (2 bytes) + 16 * fixint
+	if done != length {
+		t.Errorf("Encoded length should be %v but is %v", length, done)
+	}
+
+	if bytes[0] != byte(0xde) {
+		t.Errorf("Should be encoded as fixmap 0xde but is 0x%x", bytes[0])
+	}
+	_, dec = Decode(&bytes, 0)
+	for k, _ := range dec.(map[string]interface{}) {
+		if _, found := val[k]; !found {
+			t.Errorf("Decode should be %v but was %v", val, dec)
+		}
+	}
+	bufpool.Put(bytes)
+}
+
+func BenchmarkEncodeFixMap(b *testing.B) {
+	val := map[string]interface{}{"a": 1, "b": 2, "c": 3}
+	for i := 0; i < b.N; i++ {
+		bytes := bufpool.Get().([]byte)
+		Encode(val, &bytes)
+		bufpool.Put(bytes)
+	}
+}
+
+func BenchmarkEncodeMap16(b *testing.B) {
+	val := map[string]interface{}{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6, "g": 7, "h": 8, "i": 9, "j": 10, "k": 11, "l": 12, "m": 13, "n": 14, "o": 15, "p": 16}
+	for i := 0; i < b.N; i++ {
+		bytes := bufpool.Get().([]byte)
+		Encode(val, &bytes)
+		bufpool.Put(bytes)
+	}
+}
