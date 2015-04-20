@@ -38,6 +38,19 @@ func compareInterfaceStringSlice(x, y []interface{}) bool {
 	return true
 }
 
+// returns true if the two slices are equal
+func compareInterfaceInt64Slice(x, y []interface{}) bool {
+	if len(x) != len(y) {
+		return false
+	}
+	for idx := range x {
+		if x[idx].(int64) != y[idx].(int64) {
+			return false
+		}
+	}
+	return true
+}
+
 func TestEncodeBool(t *testing.T) {
 	val := true
 	bytes := bufpool.Get().([]byte)
@@ -404,6 +417,23 @@ func BenchmarkEncodeArrayString(b *testing.B) {
 		Encode(val, &bytes)
 		bufpool.Put(bytes)
 	}
+}
+
+func TestEncodeArrayInts(t *testing.T) {
+	var bytes []byte
+	var dec interface{}
+	val := []interface{}{int64(1), int64(2), int64(3)}
+	bytes = bufpool.Get().([]byte)
+	done := Encode(val, &bytes)
+	length := 1 + 3*9 // array len + 3 64-bit numbers
+	if done != length {
+		t.Errorf("Encoded length should be %v but is %v", length, done)
+	}
+	_, dec = Decode(&bytes, 0)
+	if !compareInterfaceInt64Slice(dec.([]interface{}), val) {
+		t.Errorf("Decode should be %v but was %v", val, dec)
+	}
+	bufpool.Put(bytes)
 }
 
 func TestEncodeFixMap(t *testing.T) {
