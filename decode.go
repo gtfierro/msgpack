@@ -42,6 +42,7 @@ func parseInt(input *[]byte, offset int) (int64, int) {
 		value    int64
 		consumed int
 		tmp      uint64 // used for zero-copy conversion
+		shift    uint
 	)
 	c := (*input)[offset]
 	switch {
@@ -68,12 +69,11 @@ func parseInt(input *[]byte, offset int) (int64, int) {
 	default:
 		log.Panicf("UNKNOWN int: %v", c)
 	}
-
-	//value = int64(tmp >> 1)
+	shift = (uint(consumed) - 1) * 8
+	if (tmp & (1 << (shift - 1))) != 0 {
+		tmp = tmp - (1 << shift)
+	}
 	value = int64(tmp)
-	//if tmp&1 != 0 {
-	//	value = ^value
-	//}
 
 ret:
 	return value, consumed
