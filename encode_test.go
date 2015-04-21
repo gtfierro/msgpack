@@ -425,7 +425,7 @@ func TestEncodeArrayInts(t *testing.T) {
 	val := []interface{}{int64(1), int64(2), int64(3)}
 	bytes = bufpool.Get().([]byte)
 	done := Encode(val, &bytes)
-	length := 1 + 3*9 // array len + 3 64-bit numbers
+	length := 1 + 3*1 // array len + 3 fix-bit numbers
 	if done != length {
 		t.Errorf("Encoded length should be %v but is %v", length, done)
 	}

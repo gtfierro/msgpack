@@ -59,7 +59,7 @@ func encodeBool(buf []byte, offset int, val bool) int {
 	return offset + 1
 }
 
-func encodeInt(buf []byte, offset, val int) int {
+func encodeInt(buf []byte, offset int, val int64) int {
 	if val < 128 && val >= 0 {
 		buf[offset] = byte(0x7f & val)
 		offset += 1
@@ -68,62 +68,39 @@ func encodeInt(buf []byte, offset, val int) int {
 		offset += 1
 	} else { // go to int64
 		// find the smallest mask we can use
-		switch val {
-		case val & 0xff: // maybe 8 bit
-			offset = encodeInt8(buf, offset, int64(val))
-		case val & 0xffff: // maybe 16 bit
-			offset = encodeInt16(buf, offset, int64(val))
-		case val & 0xffffffff: // maybe 32 bit
-			offset = encodeInt32(buf, offset, int64(val))
+		switch {
+		case val < -2147483648 || val >= 2147483648:
+			buf[offset] = byte(0xd3)
+			buf[offset+1] = byte(uint64(val) >> 56)
+			buf[offset+2] = byte(uint64(val) >> 48)
+			buf[offset+3] = byte(uint64(val) >> 40)
+			buf[offset+4] = byte(uint64(val) >> 32)
+			buf[offset+5] = byte(uint64(val) >> 24)
+			buf[offset+6] = byte(uint64(val) >> 16)
+			buf[offset+7] = byte(uint64(val) >> 8)
+			buf[offset+8] = byte(uint64(val) & 0xff)
+			offset += 9
+		case val < -32768 || val >= 32768:
+			buf[offset] = byte(0xd2)
+			buf[offset+1] = byte(uint64(val) >> 24)
+			buf[offset+2] = byte(uint64(val) >> 16)
+			buf[offset+3] = byte(uint64(val) >> 8)
+			buf[offset+4] = byte(uint64(val))
+			offset += 5
+		case val < -128 || val > 128:
+			buf[offset] = byte(0xd1)
+			buf[offset+1] = byte(uint64(val) >> 8)
+			buf[offset+2] = byte(uint64(val))
+			offset += 3
+		case val < -32:
+			buf[offset] = byte(0xd0)
+			buf[offset+1] = byte(uint64(val))
+			offset += 2
 		default:
-			offset = encodeInt64(buf, offset, int64(val))
+			println("default")
 		}
 	}
 	return offset
-}
-
-func encodeInt8(buf []byte, offset int, val int64) int {
-	if val > 0x7f {
-		return encodeInt16(buf, offset, val)
-	}
-	buf[offset] = byte(0xd0)
-	buf[offset+1] = byte(val)
-	return offset + 2
-}
-
-func encodeInt16(buf []byte, offset int, val int64) int {
-	if val > 0x7fff {
-		return encodeInt32(buf, offset, val)
-	}
-	buf[offset] = byte(0xd1)
-	buf[offset+1] = byte(val >> 8)
-	buf[offset+2] = byte(val & 0xff)
-	return offset + 3
-}
-
-func encodeInt32(buf []byte, offset int, val int64) int {
-	if val > 0x7fffffff {
-		return encodeInt64(buf, offset, val)
-	}
-	buf[offset] = byte(0xd2)
-	buf[offset+1] = byte(val >> 24)
-	buf[offset+2] = byte(val >> 16)
-	buf[offset+3] = byte(val >> 8)
-	buf[offset+4] = byte(val & 0xff)
-	return offset + 5
-}
-
-func encodeInt64(buf []byte, offset int, val int64) int {
-	buf[offset] = byte(0xd3)
-	buf[offset+1] = byte(val >> 56)
-	buf[offset+2] = byte(val >> 48)
-	buf[offset+3] = byte(val >> 40)
-	buf[offset+4] = byte(val >> 32)
-	buf[offset+5] = byte(val >> 24)
-	buf[offset+6] = byte(val >> 16)
-	buf[offset+7] = byte(val >> 8)
-	buf[offset+8] = byte(val & 0xff)
-	return offset + 9
 }
 
 func encodeUint(buf []byte, offset int, val uint) int {
@@ -263,11 +240,23 @@ func encodeMap(buf []byte, offset int, val map[string]interface{}) int {
 func doEncode(input interface{}, ret *[]byte, offset int) int {
 	switch input.(type) {
 	case int:
-		offset = encodeInt(*ret, offset, input.(int))
+		offset = encodeInt(*ret, offset, int64(input.(int)))
+	case int8:
+		offset = encodeInt(*ret, offset, int64(input.(int8)))
+	case int16:
+		offset = encodeInt(*ret, offset, int64(input.(int16)))
+	case int32:
+		offset = encodeInt(*ret, offset, int64(input.(int32)))
 	case uint:
 		offset = encodeUint(*ret, offset, input.(uint))
+	case uint8:
+		offset = encodeUint(*ret, offset, uint(input.(uint8)))
+	case uint16:
+		offset = encodeUint(*ret, offset, uint(input.(uint16)))
+	case uint32:
+		offset = encodeUint(*ret, offset, uint(input.(uint32)))
 	case int64:
-		offset = encodeInt64(*ret, offset, input.(int64))
+		offset = encodeInt(*ret, offset, input.(int64))
 	case uint64:
 		offset = encodeUint(*ret, offset, uint(input.(uint64)))
 	case string:
@@ -280,7 +269,11 @@ func doEncode(input interface{}, ret *[]byte, offset int) int {
 		offset = encodeBool(*ret, offset, input.(bool))
 	case nil:
 		offset = encodeNil(*ret, offset)
+	case interface{}:
+		// treat as int64
+		offset = encodeInt(*ret, offset, input.(int64))
 	default:
+		println("default")
 	}
 	return offset
 }
