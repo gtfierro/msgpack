@@ -19,6 +19,7 @@
 package msgpack
 
 import (
+	"math"
 	"sync"
 )
 
@@ -101,6 +102,30 @@ func encodeInt(buf []byte, offset int, val int64) int {
 		}
 	}
 	return offset
+}
+
+func encodeFloat32(buf []byte, offset int, val float32) int {
+	bits := uint64(math.Float32bits(val))
+	buf[offset] = byte(0xca)
+	buf[offset+1] = byte(bits >> 24)
+	buf[offset+2] = byte(bits >> 16)
+	buf[offset+3] = byte(bits >> 8)
+	buf[offset+4] = byte(bits)
+	return offset + 5
+}
+
+func encodeFloat64(buf []byte, offset int, val float64) int {
+	bits := math.Float64bits(val)
+	buf[offset] = byte(0xcb)
+	buf[offset+1] = byte(bits >> 56)
+	buf[offset+2] = byte(bits >> 48)
+	buf[offset+3] = byte(bits >> 40)
+	buf[offset+4] = byte(bits >> 32)
+	buf[offset+5] = byte(bits >> 24)
+	buf[offset+6] = byte(bits >> 16)
+	buf[offset+7] = byte(bits >> 8)
+	buf[offset+8] = byte(bits)
+	return offset + 9
 }
 
 func encodeUint(buf []byte, offset int, val uint) int {
@@ -259,6 +284,10 @@ func doEncode(input interface{}, ret *[]byte, offset int) int {
 		offset = encodeInt(*ret, offset, input.(int64))
 	case uint64:
 		offset = encodeUint(*ret, offset, uint(input.(uint64)))
+	case float32:
+		offset = encodeFloat32(*ret, offset, input.(float32))
+	case float64:
+		offset = encodeFloat64(*ret, offset, input.(float64))
 	case string:
 		offset = encodeString(*ret, offset, input.(string))
 	case map[string]interface{}:

@@ -501,3 +501,45 @@ func BenchmarkEncodeMap16(b *testing.B) {
 		bufpool.Put(bytes)
 	}
 }
+
+func TestEncodeFloat32(t *testing.T) {
+	var bytes []byte
+	var dec interface{}
+	var val float32 = 2.5
+	bytes = bufpool.Get().([]byte)
+	done := Encode(val, &bytes)
+	length := 5 // len of float32
+	if done != length {
+		t.Errorf("Encoded length should be %v but is %v", length, done)
+	}
+
+	if bytes[0] != byte(0xca) {
+		t.Errorf("Should be encoded as fixmap 0xca but is 0x%x", bytes[0])
+	}
+	_, dec = Decode(&bytes, 0)
+	if dec.(float64) != float64(val) {
+		t.Errorf("Decode should be %v but was %v", val, dec)
+	}
+	bufpool.Put(bytes)
+}
+
+func TestEncodeFloat64(t *testing.T) {
+	var bytes []byte
+	var dec interface{}
+	var val float64 = 2000000000000.5
+	bytes = bufpool.Get().([]byte)
+	done := Encode(val, &bytes)
+	length := 9 // len of float64
+	if done != length {
+		t.Errorf("Encoded length should be %v but is %v", length, done)
+	}
+
+	if bytes[0] != byte(0xcb) {
+		t.Errorf("Should be encoded as fixmap 0xcb but is 0x%x", bytes[0])
+	}
+	_, dec = Decode(&bytes, 0)
+	if dec.(float64) != float64(val) {
+		t.Errorf("Decode should be %v but was %v", val, dec)
+	}
+	bufpool.Put(bytes)
+}

@@ -88,8 +88,8 @@ func parseFloat(input *[]byte, offset int) (float64, int) {
 	c := (*input)[offset]
 	switch {
 	case c == 0xca:
-		bits := binary.BigEndian.Uint64((*input)[offset+1 : offset+5])
-		value = math.Float64frombits(bits)
+		bits := binary.BigEndian.Uint32((*input)[offset+1 : offset+5])
+		value = float64(math.Float32frombits(bits))
 		consumed = 5
 	case c == 0xcb:
 		bits := binary.BigEndian.Uint64((*input)[offset+1 : offset+9])
