@@ -19,6 +19,8 @@
 package msgpack
 
 import (
+	"fmt"
+	"gopkg.in/vmihailenco/msgpack.v2"
 	"math"
 	"sync"
 )
@@ -299,12 +301,20 @@ func doEncode(input interface{}, ret *[]byte, offset int) int {
 	case nil:
 		offset = encodeNil(*ret, offset)
 	case interface{}:
-		// treat as int64
-		offset = encodeInt(*ret, offset, input.(int64))
+		offset = doEncodeReflect(input, ret, offset)
 	default:
 		println("default")
 	}
 	return offset
+}
+
+func doEncodeReflect(input interface{}, ret *[]byte, offset int) int {
+	b, err := msgpack.Marshal(input)
+	if err != nil {
+		fmt.Errorf("Error %v\n", err)
+	}
+	copy((*ret)[offset:], b)
+	return offset + len(b)
 }
 
 // Encodes the input as a msgpack byte array, which is provided

@@ -411,7 +411,7 @@ func TestEncodeArray16(t *testing.T) {
 }
 
 func BenchmarkEncodeArrayString(b *testing.B) {
-	val := []string{"asdf", "fdsa", "four", "gabe"}
+	val := []interface{}{"asdf", "fdsa", "four", "gabe"}
 	for i := 0; i < b.N; i++ {
 		bytes := bufpool.Get().([]byte)
 		Encode(val, &bytes)
