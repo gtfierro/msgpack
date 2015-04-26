@@ -303,7 +303,7 @@ func doEncode(input interface{}, ret *[]byte, offset int) int {
 	case interface{}:
 		offset = doEncodeReflect(input, ret, offset)
 	default:
-		println("default")
+		offset = doEncodeReflect(input, ret, offset)
 	}
 	return offset
 }
